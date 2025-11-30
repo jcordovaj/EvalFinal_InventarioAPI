@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!--
+    IMPORTANTE: SÓLO se aplica al APK de PRUEBAS.
+    Anula la etiqueta <application> del manifest principal.
+    -->
+    <application
+        android:name="dagger.hilt.android.testing.HiltTestApplication"
+        android:allowBackup="false"
+        android:label="Test Inventario API"
+        android:usesCleartextTraffic="true"/>
+
+</manifest>
