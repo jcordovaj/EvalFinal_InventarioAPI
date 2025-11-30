@@ -16,7 +16,7 @@ Aplicación nativa para Android, desarrollada en Kotlin, diseñada para gestiona
 | 2. Operaciones CRUD en Tiempo Real | El usuario puede**agregar,  editar,  eliminar y consultar** productos. Todas las operaciones se reflejan en la base de datos local y se **sincronizan** con la API remota.          |
 | 3. Lista de Productos              | Muestra una lista navegable (`RecyclerView`) de productos con datos básicos: **ID, Nombre, Precio y Cantidad**.                                                                     |
 | 4. Pantallas de Formulario         | Implementa un formulario de entrada (vía `DialogFragment` o `Fragment`) para la creación y edición detallada de productos.                                                          |
-| 5. Navegación Segura               | Se utiliza **Navigation Component** con **Safe Args** para gestionar el flujo de la aplicación.                                                                                     |
+| 5. Navegación Segura               | Se utiliza**Navigation Component** con **Safe Args** para gestionar el flujo de la aplicación.                                                                                      |
 
 ---
 
@@ -50,103 +50,56 @@ El flujo de datos está diseñado para ser reactivo y manejar la sincronización
 ## 🛠️ Tecnologías usadas
 
 - **IDE** : Android Studio
-- **Plataforma** : Android Nativo
-- **Lenguaje** : Kotlin (1.9.22)
-- **Arquitectura** : MVVM (Model-View-ViewModel).
-- **Conectividad** : Retrofit (para API REST)
-- **Persistencia** : Room Database (SQL Abstraction).
-- **Concurrencia** : Kotlin Coroutines y `viewModelScope` (Dispatchers.IO).
-- **Navegación** : Navigation Component y Safe Args (Parcelable para argumentos)
-- **UI/Reactividad** : LiveData (Reactividad) y View Binding.
-
----
+- **Lenguaje** :**Kotlin** (1.9.22)
+- **Arquitectura** :**MVVM** (Model-View-ViewModel).
+- **Inyección de Dependencias** :**Dagger Hilt**
+- **Conectividad** :**Retrofit** (para API REST)
+- **Persistencia** :**Room Database** (SQL Abstraction).
+- **Concurrencia** :**Kotlin Coroutines** y `viewModelScope`.
+- **Navegación** :**Navigation Component** y **Safe Args** .
+- **UI/Reactividad** :**StateFlow/LiveData** (Reactividad) y **View Binding** .
 
 ## 🏗️ Funcionamiento de la Aplicación
 
-El flujo de la aplicación se centra en la consulta y presentación de datos:
+El flujo de la aplicación se centra en la consulta, adición y actualización de datos:
 
-1. **Inicio (Splash)**: La aplicación comienza en el SplashFragment, donde se oculta toda la UI auxiliar para dar una bienvenida limpia.
-2. **Carga de Datos**: Tras el Splash, el UsersListFragment pide al UserViewModel que inicie la llamada asíncrona a la API (vía Retrofit/Repository).
-3. **Visualización de Lista**: Una vez que la lista de usuarios se recibe, el LiveData se actualiza y el RecyclerView muestra la lista (ID, Nombre, Email). La ActionBar y BottomNavigationView se hacen visibles.
-4. **Consulta Detallada**: Al hacer clic en un usuario, Safe Args transfiere el objeto User completo al UserDetailFragment.
-5. **Detalle Completo**: El UserDetailFragment utiliza el objeto User recibido para poblar todos los campos detallados (Dirección, Compañía, etc.) en un CardView.
-6. **Navegación**: El botón "Atrás" de la ActionBar (gestionado por NavigationUI) y el botón "Atrás" en la BottomNavigationView permiten regresar a la lista de usuarios.
+1. **Inicio (Splash)**: La aplicación comienza con un SplashFragment, donde se oculta toda la UI auxiliar para dar una bienvenida limpia.
+2. **Carga de Datos**: Tras el Splash, el MainActivity pide al InventoryViewModel que inicie la llamada asíncrona a la API (vía Retrofit/Repository).
+3. **Visualización de Lista**: Una vez que la lista de productos se recibe (por defecto vacía), el LiveData se actualiza y el RecyclerView muestra la lista (ID, Nombre, Producto, Descripción, Precio, Cantidad). Un FAB se hace visible para agregar nuevos productos.
+4. **Editar/Eliminar Producto**: Al hacer clic sobre los íconos de delete o edit en un producto, Safe Args transfiere el objeto Producto completo al activity_edit_product.
 
 ---
 
-## 🧩 Estrategia de Testeo (Anexo AE3-ABP1 - Testing en Android)
+## 🧩 Estrategia de Testeo
 
-Anexando los resultados del **_caso AE3-ABP1_**, se ha implementado una estrategia de testeo integral orientada a mantener comprobar funcionalidad, bajo acoplamiento y compatibilidad continua entre pruebas unitarias e instrumentadas, sin afectar el entorno de producción (sin romper el código).
+Se implementa una estrategia de testeo integral para validar cada capa, manteniendo la independencia entre ambientes de producción y pruebas.
 
-1. Objetivos principales
+### 1. Pruebas Unitarias (JVM Local)
 
-- Asegurar la correcta funcionalidad de la capa de datos (repositorios y modelos).
-- Validar el comportamiento del ViewModel con respecto a los diferentes estados del flujo (Loading, Success, Error).
-- Verificar la integridad básica de la interfaz de usuario (UI) sin depender de servicios externos ni romper la ejecución normal del código de producción.
-- Mantener independencia entre pruebas unitarias e instrumentadas para facilitar la depuración y el mantenimiento.
+| **Clase de Prueba**           | **Objetivo**                                                                                                    | **Herramientas Clave**                |
+| ----------------------------- | --------------------------------------------------------------------------------------------------------------- | ------------------------------------- |
+| **`ProductMapperTest`**       | Asegurar la correcta**conversión**entre `Entity`,`Response`y Modelos de Dominio.                                | JUnit 4                               |
+| **`InventoryRepositoryTest`** | Validar la**lógica de sincronización**y delegación de llamadas a la API y Room.                                 | MockK,`runTest`,`TestDispatcherRule`  |
+| **`InventoryViewModelTest`**  | Verificar la**gestión de estados**(`Idle`,`Loading`,`Success`,`Error`) y la correcta delegación al Repositorio. | MockK,`runTest`,`StateFlow`collection |
 
-2. Tipos de pruebas
+### 2. Pruebas de Interfaz (Instrumentación)
 
-   i. Pruebas Unitarias
+| **Clase de Prueba**         | **Objetivo**                                                                                                                                                      | **Herramientas Clave**     |
+| --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------- |
+| **`ProductDaoTest`**        | Prueba de Persistencia (In-Memory DB). Asegura que las consultas**SQL** y las operaciones CRUD de Room se ejecutan correctamente en una base de datos en memoria. | Room Testing, JUnit 4/5    |
+| `ListaProductosUI_BotonFab` | Verifica que los elementos UI esenciales (lista, botón FAB) se**despliegan** correctamente y que la interacción básica es funcional.                              | Espresso, FragmentScenario |
 
-   - Ejecutan en la JVM local sin depender del entorno Android.
-   - Evalúan la lógica del negocio en clases como UserRepository y UserViewModel.
-   - Se apoyan en MockK para simular dependencias (UserService, UserRepository).
-   - Usan reglas y herramientas auxiliares:
-   - InstantTaskExecutorRule → fuerza la ejecución síncrona de LiveData.
-   - TestDispatcherRule → reemplaza el Dispatchers.Main por un TestDispatcher.
-   - getOrAwaitValue() → espera valores de LiveData de forma segura y sin bloqueos infinitos.
-   - Muestreo del test:
+### 3. Buenas prácticas aplicadas
 
-```kotlin
+i. Independencia total entre ambientes de producción y pruebas.
 
-fun `fetchUsers debe actualizar userList a NetworkResult_Success`() = runTest {
-    coEvery { userRepository.getUsers() } returns NetworkResult.Success(mockUserList)
-    viewModel.fetchUsers()
-    val result = viewModel.userList.getOrAwaitValue()
-    assertTrue(result is NetworkResult.Success)
-}
+ii. No se sobreescriben versiones ni dependencias desde los archivos Gradle.
 
-```
+iii. Mocks controlados (con MockK) para evitar efectos colaterales.
 
-    ii. Pruebas Instrumentadas
+iv. Reglas de entorno limpias (InstantTaskExecutorRule, TestDispatcherRule) que restauran el estado tras cada test.
 
-    - Ejecutadas en entorno Android emulado.
-
-    - Validan que las vistas se inflen correctamente y que el fragmento inicialice sin errores.
-
-    - Usan el FragmentScenario (launchFragmentInContainer) de androidx.fragment:fragment-testing.
-
-    - Evitan dependencias con el backend, verificando únicamente el renderizado de la UI base.
-
-    - Muestreo del test:
-
-```kotlin
-
-@Test
-fun fragment_se_inicia_y_muestra_vistas_basicas() {
-launchFragmentInContainer<UsersListFragment>(
-themeResId = R.style.Theme_Ae2_abpro1_Listeylor
-)
-onView(withId(R.id.rv_users))
-.check(matches(isDisplayed()))
-}
-
-```
-
-3. Buenas prácticas aplicadas
-
-   i. Independencia total entre ambientes de producción y pruebas.
-
-   ii. No se sobreescriben versiones ni dependencias desde los archivos Gradle.
-
-   iii. Mocks controlados (con MockK) para evitar efectos colaterales.
-
-   iv. Sin uso de delays o Thread.sleep(), garantizando tiempos de ejecución estables.
-
-   v. Reglas de entorno limpias (InstantTaskExecutorRule, TestDispatcherRule) que restauran el estado tras cada test.
-
-   vi. Pueden ejecutarse múltiples veces sin producir resultados distintos.
+v. Pueden ejecutarse múltiples veces sin producir resultados distintos.
 
 ---
 
@@ -155,13 +108,13 @@ onView(withId(R.id.rv_users))
 <table width="100%">
     <tr>
         <td align="center" width="33%">
-            <img src="scrapbook/AppInstalada.png" alt="Icono App" width="200"/>
+            <img src="scrapbook/Icono.png" alt="Icono App" width="200"/>
         </td>
         <td align="center" width="33%">
             <img src="scrapbook/Lanzamiento.png" alt="Al lanzar la app" width="200"/>
         </td>
         <td align="center" width="33%">
-            <img src="scrapbook/Splash.png" alt="Pantalla bienvenida" width="200"/>
+            <img src="scrapbook/SplashInventarioAPI.png" alt="Pantalla bienvenida" width="200"/>
         </td>
     </tr>
     <tr>
@@ -171,35 +124,67 @@ onView(withId(R.id.rv_users))
     </tr>
     <tr>
         <td align="center">
-            <img src="scrapbook/Lista.png" alt="Lista de usuarios" width="200"/>
+            <img src="scrapbook/paginaInicialListaInventario.png" alt="Lista de productos" width="200"/>
         </td>
         <td align="center">
-            <img src="scrapbook/Detalle.png" alt="Detalle de usuarios" width="200"/>
+            <img src="scrapbook/AddProducto.png" alt="Agregar producto" width="200"/>
         </td>
         <td align="center">
-            <img src="scrapbook/UsersListFragmentTest.png" alt="Test UsersListFragment" width="200"/>
+            <img src="scrapbook/AddZapallo01.png" alt="Agregando Zapallo" width="200"/>
         </td>
     </tr>
     <tr>
-        <td align="center">Lista de usurios con datos básicos, incluye placeholder para una futura fotografía (la api no la incluye)</td>
-        <td align="center">Detalle de un usuario</td>
-        <td align="center">Test clase UsersListFragment"</td>
+        <td align="center">Listado inicial (por defecto vacía), muestra íconos para borrar o editar</td>
+        <td align="center">Agregar un producto</td>
+        <td align="center">Agregar producto ejemplo "Zapallo"</td>
     </tr>
     <tr>
         <td align="center">
-            <img src="scrapbook/TestUserViewModelTest.png" alt="Test UserViewModel" width="200"/>
+            <img src="scrapbook/AddedZapallo.png" alt="Producto Zapallo agregado" width="200"/>
         </td>
         <td align="center">
-            <img src="scrapbook/UserRepositoryTest.png" alt="Test UserRepository" width="200"/>
+            <img src="scrapbook/EditZapallo.png" alt="Editar producto Zapallo" width="200"/>
         </td>
         <td align="center">
-            <img src="scrapbook/PERASCONMANZANAS.png" alt="Landing" width="200"/>
+            <img src="scrapbook/DeleteZapallo.png" alt="Borrar producto Zapallo" width="200"/>
         </td>
     </tr>
     <tr>
-        <td align="center">Test UserViewModel</td>
-        <td align="center">Test UserRepository</td>
-        <td align="center">Otro desarrollo de "Peras con Manzanas"</td>
+        <td align="center">Producto 'Zapallo' agregado</td>
+        <td align="center">Editar producto 'Zapallo'</td>
+        <td align="center">Borrar producto 'Zapallo'</td>
+    </tr>
+    <tr>
+        <td align="center">
+            <img src="scrapbook/Listado01.png" alt="Listado actualizado " width="200"/>
+        </td>
+        <td align="center">
+            <img src="scrapbook/testUI_01_InsertarProducto.png" alt="Prueba UI Insertar producto" width="200"/>
+        </td>
+        <td align="center">
+            <img src="scrapbook/testUI_02_ListaProductosUI_BotonFAB.png" alt="Prueba UI Lista Productos" width="200"/>
+        </td>
+    </tr>
+    <tr>
+        <td align="center">Listado actualizado</td>
+        <td align="center">Prueba UI01: Insertar producto</td>
+        <td align="center">Prueba UI02: Lista productos</td>
+    </tr>
+     <tr>
+        <td align="center">
+            <img src="scrapbook/testUnitario_01_InventoryViewModelTest.png" alt="Prueba Unitaria InventoryViewModel" width="200"/>
+        </td>
+        <td align="center">
+            <img src="scrapbook/testUnitario_02_InventoryRepositoryTest.png" alt="Prueba Unitaria InventoryRepository" width="200"/>
+        </td>
+        <td align="center">
+            <img src="scrapbook/testUnitario_03_ProductoMapperTest.png" alt="Prueba Unitaria ProductoMapper" width="200"/>
+        </td>
+    </tr>
+    <tr>
+        <td align="center">Prueba Unitaria: ViewModel</td>
+        <td align="center">Prueba Unitaria: Repository</td>
+        <td align="center">Prueba Unitaria: Mapeo de productos</td>
     </tr>
 </table>
 
@@ -211,7 +196,7 @@ onView(withId(R.id.rv_users))
 
     1.**Clonar el Repo:** Clona el proyecto en su máquina local.
 
-    2.**Abrir en Android Studio:** Abra la carpeta del proyecto con Android Studio. El IDE detectará automáticamente la configuración de Gradle.
+    2.**Abrir en Android Studio:** Seleccione **"Open an existing Android Studio project"** y navegue a la carpeta clonada. El IDE detectará automáticamente la configuración de Gradle.
 
     3.**Sincronizar Gradle:** Haz clic en el botón "Sync Now" si Android Studio te lo solicita. Esto descargará todas las dependencias necesarias.
 
@@ -270,6 +255,31 @@ e.1. Seleccione el dispositivo o emulador deseado en la barra de herramientas de
 e.2. Haga click en el botón "Run 'app'" (el triángulo verde en la parte superior, o vaya al menu "RUN") para iniciar la compilación y el despliegue de la aplicación, puede tardar algunos minutos, dependiendo de su computador.
 
 e.3. Si todo ha sido configurado correctamente, la aplicación se instalará en el dispositivo y se iniciará automáticamente, mostrando la pantalla de inicio.
+
+---
+
+## 📦 Generación del Paquete de Producción (APK/AAB)
+
+Para subir la aplicación a Google Play Store o distribuirla, debes generar un paquete de _release_ (generalmente un AAB) firmado.
+
+### 1 Generar la Clave de Firma (Si es la primera vez)
+
+1. En Android Studio, ve a **Build > Generate Signed Bundle / APK...** .
+2. Selecciona **Android App Bundle** (recomendado para Play Store) o **APK** . Haz clic en **Next** .
+3. En la ventana **Key store path** , haz clic en **Create new...** .
+4. Rellena todos los campos (ubicación, contraseña, _alias_ ) y haz clic en **OK** . **Guarda esta clave de forma segura.**
+
+### 2 Generar el Paquete de Release
+
+1. Ve a **Build > Generate Signed Bundle / APK...** .
+2. Selecciona el formato deseado (AAB o APK) y haz clic en **Next** .
+3. **Key store path:** Selecciona el archivo `.jks` que creaste en el paso 4.1.
+4. Introduce la **Key store password** y la **Key alias password** .
+5. **Build variants:** Selecciona **`release`** .
+6. **Signature versions:** Marca **V1 (JAR Signing)** y **V2 (Full APK Signature)** .
+7. Haz clic en **Finish** .
+
+El archivo de producción (`app-release.aab` o `app-release.apk`) se generará en el directorio `app/release/`. Este archivo está listo para su distribución.
 
 ---
 
