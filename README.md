@@ -273,7 +273,7 @@ Para subir la aplicación a Google Play Store o distribuirla, debes generar un p
 
 1. Ve a **Build > Generate Signed Bundle / APK...** .
 2. Selecciona el formato deseado (AAB o APK) y haz clic en **Next** .
-3. **Key store path:** Selecciona el archivo `.jks` que creaste en el paso 4.1.
+3. **Key store path:** Selecciona el archivo `.jks` que creaste en el paso anterior.
 4. Introduce la **Key store password** y la **Key alias password** .
 5. **Build variants:** Selecciona **`release`** .
 6. **Signature versions:** Marca **V1 (JAR Signing)** y **V2 (Full APK Signature)** .
