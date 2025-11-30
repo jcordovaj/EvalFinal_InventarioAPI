@@ -10,13 +10,13 @@ Aplicación nativa para Android, desarrollada en Kotlin, diseñada para gestiona
 
 ## 🎯 Requerimientos de Funcionalidad y su Implementación
 
-| Requerimiento                      | Implementación en V5                                                                                                                                                                |
-| ---------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Requerimiento                       | Implementación en V5                                                                                                                                                                                |
+| ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 1. Carga y Sincronización de Datos | El `Repository`  utiliza **Retrofit** para consumir una API REST para la sincronización y actualización del inventario. Los datos se almacenan y se sirven desde **Room Database**. |
-| 2. Operaciones CRUD en Tiempo Real | El usuario puede**agregar,  editar,  eliminar y consultar** productos. Todas las operaciones se reflejan en la base de datos local y se **sincronizan** con la API remota.          |
-| 3. Lista de Productos              | Muestra una lista navegable (`RecyclerView`) de productos con datos básicos: **ID, Nombre, Precio y Cantidad**.                                                                     |
-| 4. Pantallas de Formulario         | Implementa un formulario de entrada (vía `DialogFragment` o `Fragment`) para la creación y edición detallada de productos.                                                          |
-| 5. Navegación Segura               | Se utiliza**Navigation Component** con **Safe Args** para gestionar el flujo de la aplicación.                                                                                      |
+| 2. Operaciones CRUD en Tiempo Real  | El usuario puede**agregar,  editar,  eliminar y consultar** productos. Todas las operaciones se reflejan en la base de datos local y se **sincronizan** con la API remota.             |
+| 3. Lista de Productos               | Muestra una lista navegable (`RecyclerView`) de productos con datos básicos: **ID, Nombre, Precio y Cantidad**.                                                                             |
+| 4. Pantallas de Formulario          | Implementa un formulario de entrada (vía `DialogFragment` o `Fragment`) para la creación y edición detallada de productos.                                                                    |
+| 5. Navegación Segura              | Se utiliza**Navigation Component** con **Safe Args** para gestionar el flujo de la aplicación.                                                                                          |
 
 ---
 
@@ -24,13 +24,13 @@ Aplicación nativa para Android, desarrollada en Kotlin, diseñada para gestiona
 
 Se implementa el patrón **MVVM** para una arquitectura limpia,**Dagger Hilt** para la inyección de dependencias, y se utilizan componentes de Android Jetpack para la estructura y reactividad.
 
-| Capa               | Componente                   | Descripción                                                                                                                                            |
-| ------------------ | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Persistencia Local | Room Database y DAO          | Almacena y gestiona `ProductoEntity ` en la base de datos local. El DAO define operaciones CRUD y consultas usando `Flow`.                             |
-| Acceso Remoto      | Retrofit y ApiService        | Interfaz de Retrofit que define los*endpoints* de la API REST para las operaciones CRUD, utilizando funciones **`suspend`** de Coroutines.             |
-| Repositorio        | **`InventoryRepository.kt`** | Centraliza la lógica de acceso a datos. Decide si cargar desde Room, la API, o sincronizar ambos. Ejecuta llamadas en un `Dispatcher.IO`.              |
-| ViewModel          | InventoryViewModel.kt        | Contiene la lógica de negocio y gestión de estados. Utiliza `viewModelScope` y expone el estado de la UI mediante **`StateFlow`** y/o **`LiveData`** . |
-| Vista              | **Fragments y Activity**     | Observan `StateFlow` del `ViewModel` para actualizar la UI. Utilizan **View Binding** y **Navigation Component** .                                     |
+| Capa               | Componente                           | Descripción                                                                                                                                                               |
+| ------------------ | ------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Persistencia Local | Room Database y DAO                  | Almacena y gestiona `ProductoEntity ` en la base de datos local. El DAO define operaciones CRUD y consultas usando `Flow`.                                             |
+| Acceso Remoto      | Retrofit y ApiService                | Interfaz de Retrofit que define los*endpoints* de la API REST para las operaciones CRUD, utilizando funciones **`suspend`** de Coroutines.                       |
+| Repositorio        | **`InventoryRepository.kt`** | Centraliza la lógica de acceso a datos. Decide si cargar desde Room, la API, o sincronizar ambos. Ejecuta llamadas en un `Dispatcher.IO`.                               |
+| ViewModel          | InventoryViewModel.kt                | Contiene la lógica de negocio y gestión de estados. Utiliza `viewModelScope` y expone el estado de la UI mediante **`StateFlow`** y/o **`LiveData`** . |
+| Vista              | **Fragments y Activity**       | Observan `StateFlow` del `ViewModel` para actualizar la UI. Utilizan **View Binding** y **Navigation Component** .                                         |
 
 ---
 
@@ -76,18 +76,18 @@ Se implementa una estrategia de testeo integral para validar cada capa, mantenie
 
 ### 1. Pruebas Unitarias (JVM Local)
 
-| **Clase de Prueba**           | **Objetivo**                                                                                                    | **Herramientas Clave**                |
-| ----------------------------- | --------------------------------------------------------------------------------------------------------------- | ------------------------------------- |
-| **`ProductMapperTest`**       | Asegurar la correcta**conversión**entre `Entity`,`Response`y Modelos de Dominio.                                | JUnit 4                               |
-| **`InventoryRepositoryTest`** | Validar la**lógica de sincronización**y delegación de llamadas a la API y Room.                                 | MockK,`runTest`,`TestDispatcherRule`  |
+| **Clase de Prueba**             | **Objetivo**                                                                                                              | **Herramientas Clave**              |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------- |
+| **`ProductMapperTest`**       | Asegurar la correcta**conversión**entre `Entity`,`Response`y Modelos de Dominio.                                     | JUnit 4                                   |
+| **`InventoryRepositoryTest`** | Validar la**lógica de sincronización**y delegación de llamadas a la API y Room.                                        | MockK,`runTest`,`TestDispatcherRule`  |
 | **`InventoryViewModelTest`**  | Verificar la**gestión de estados**(`Idle`,`Loading`,`Success`,`Error`) y la correcta delegación al Repositorio. | MockK,`runTest`,`StateFlow`collection |
 
 ### 2. Pruebas de Interfaz (Instrumentación)
 
-| **Clase de Prueba**         | **Objetivo**                                                                                                                                                      | **Herramientas Clave**     |
-| --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------- |
-| **`ProductDaoTest`**        | Prueba de Persistencia (In-Memory DB). Asegura que las consultas**SQL** y las operaciones CRUD de Room se ejecutan correctamente en una base de datos en memoria. | Room Testing, JUnit 4/5    |
-| `ListaProductosUI_BotonFab` | Verifica que los elementos UI esenciales (lista, botón FAB) se**despliegan** correctamente y que la interacción básica es funcional.                              | Espresso, FragmentScenario |
+| **Clase de Prueba**     | **Objetivo**                                                                                                                                                      | **Herramientas Clave** |
+| ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- |
+| **`ProductDaoTest`**  | Prueba de Persistencia (In-Memory DB). Asegura que las consultas**SQL** y las operaciones CRUD de Room se ejecutan correctamente en una base de datos en memoria. | Room Testing, JUnit 4/5      |
+| `ListaProductosUI_BotonFab` | Verifica que los elementos UI esenciales (lista, botón FAB) se**despliegan** correctamente y que la interacción básica es funcional.                           | Espresso, FragmentScenario   |
 
 ### 3. Buenas prácticas aplicadas
 
