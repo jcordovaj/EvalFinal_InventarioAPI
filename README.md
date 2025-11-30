@@ -1,66 +1,49 @@
-# 🚀 MOD6 AE2-ABPRO1 + AE3-ABP1: Sistema de Consultas de Personal "Listeylor" (MVVM + ApiRest + Retrofit + Testing )
+# 🚀 MOD6 Evaluación final: Sistema Android para gestionar inventarios en Tiempo Real. (MVVM + Room + ApiRest + Retrofit + Testing )
 
 <p float="center">
   <img src="scrapbook/perasconmanzanas_icon.png" alt="Logo" width="200"/>
 </p>
 
-Aplicación nativa para Android, desarrollada en Kotlin, diseñada para funcionar como una herramienta de consulta de datos de personal remoto. La aplicación se conecta a una API REST para obtener un listado de usuarios con datos mínimos y, luego de seleccionar alguno, mostrar sus detalles completos. La arquitectura se basa en el patrón Model-View-ViewModel (MVVM), demostrando la integración de componentes de Android Jetpack para crear una aplicación robusta, escalable y reactiva.
+Aplicación nativa para Android, desarrollada en Kotlin, diseñada para gestionar inventarios de productos en tiempo real. La aplicación se conecta a una **API REST** para realizar operaciones CRUD (Crear, Leer, Actualizar, Eliminar) y persiste los datos localmente usando **Room** como _cache_ y fuente de verdad primaria. La arquitectura se basa en el patrón **Model-View-ViewModel (MVVM)** , utilizando componentes de **Android Jetpack** para crear una aplicación robusta, escalable y reactiva.
 
 ---
 
 ## 🎯 Requerimientos de Funcionalidad y su Implementación
 
-| Requerimiento                        | Implementación en V5                                                                                                                                                                     |
-| ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1. Carga de Datos Remotos            | La aplicación utiliza**Retrofit** para consumir una API REST y descargar la lista de objetos User.                                                                                       |
-| 2. Pantalla de Bienvenida (Splash)   | Se implementa una pantalla inicial (`SplashFragment`) sin `ActionBar` ni `BottomNavigationView` para una entrada limpia.                                                                 |
-| 3. Lista de Usuarios (User List)     | Muestra una lista navegable (`RecyclerView`) de usuarios con datos básicos: **ID, Nombre y Email**.                                                                                      |
-| 4. Detalle Completo de Usuario       | Al seleccionar un elemento de la lista, se navega a (`UserDetailFragment`) para mostrar TODOS los campos del objeto **User**, incluyendo sus estructuras anidadas (`address, company`).  |
-| 5. Navegación Segura y Control de UI | Se utiliza**Navigation Component** con **Safe Args** para pasar objetos User serializables (Parcelable) entre Fragments. La BottomNavigationView y ActionBar se gestionan dinámicamente. |
+| Requerimiento                      | Implementación en V5                                                                                                                                                                |
+| ---------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1. Carga y Sincronización de Datos | El `Repository`  utiliza **Retrofit** para consumir una API REST para la sincronización y actualización del inventario. Los datos se almacenan y se sirven desde **Room Database**. |
+| 2. Operaciones CRUD en Tiempo Real | El usuario puede**agregar,  editar,  eliminar y consultar** productos. Todas las operaciones se reflejan en la base de datos local y se **sincronizan** con la API remota.          |
+| 3. Lista de Productos              | Muestra una lista navegable (`RecyclerView`) de productos con datos básicos: **ID, Nombre, Precio y Cantidad**.                                                                     |
+| 4. Pantallas de Formulario         | Implementa un formulario de entrada (vía `DialogFragment` o `Fragment`) para la creación y edición detallada de productos.                                                          |
+| 5. Navegación Segura               | Se utiliza **Navigation Component** con **Safe Args** para gestionar el flujo de la aplicación.                                                                                     |
 
 ---
 
-## 🧠 Arquitectura y Tecnología: MVVM y Jetpack
+## 🧠 Arquitectura y Tecnología: MVVM, Jetpack, y Persistencia
 
-Se implementa el patrón MVVM (Model-View-ViewModel) para garantizar una arquitectura limpia y se utilizan componentes de Android Jetpack para la estructura y reactividad.
+Se implementa el patrón **MVVM** para una arquitectura limpia,**Dagger Hilt** para la inyección de dependencias, y se utilizan componentes de Android Jetpack para la estructura y reactividad.
 
-1. | Modelo (`Model`) y Acceso a Datos (`Retrofit`)    | Componente                                                                                                                                                                      | Descripción |
-   | ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
-   | Modelo de Datos (User.kt, Address.kt, Company.kt) | Clases de datos definidas para mapear la respuesta JSON de la API. Se implementa Parcelable en todas ellas para permitir el paso seguro de objetos entre Fragments (Safe Args). |
-   | API Service (ApiService.kt)                       | Interfaz de Retrofit que define los endpoints de la API, usando funciones suspend de Coroutines.                                                                                |
-   | Repositorio (UserRepository.kt)                   | Centraliza el acceso a los datos (ApiService), encapsulando la lógica de la red. Ejecuta llamadas de I/O dentro de funciones suspend (Kotlin Coroutines).                       |
-2. ViewModel (`UserViewModel.kt`)
-
-- Hereda de `ViewModel`.
-- Utiliza `viewModelScope.launch` para ejecutar las operaciones del **Repository** de forma asíncrona (I/O).
-- **Gestión de Estado** : Contiene la lógica para la carga de datos inicial y el manejo de los estados de la petición (Cargando, Éxito, Error).
-- Expone el estado de la aplicación a la Vista a través de **`LiveData`** o **`StateFlow`** :
-
-  - `userList`: Lista de `User` que alimenta el `RecyclerView` de forma reactiva.
-  - `loadingState`: Estado booleano para gestionar la visibilidad de barras de progreso.
-  -
-
-3. Vista (View) - Fragments y Activity
-
-- **`MainActivity.kt`** : Actúa como host de la aplicación, inicializando el `NavController` y orquestando la visibilidad global de la UI (`ActionBar` y `BottomNavigationView`).
-- **Fragments** (`SplashFragment`, `UsersListFragment`, `UserDetailFragment`):
-
-  - Observan `LiveData` del `UserViewModel` para actualizar la UI.
-  - Gestionan la navegación.
-  - Utilizan **View Binding** para el acceso seguro a las vistas (eliminando `findViewById`).
-  - **Gestión de UI** : Controlan la visibilidad de la `BottomNavigationView` mediante llamadas a funciones públicas de `MainActivity`.
+| Capa               | Componente                   | Descripción                                                                                                                                            |
+| ------------------ | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Persistencia Local | Room Database y DAO          | Almacena y gestiona `ProductoEntity ` en la base de datos local. El DAO define operaciones CRUD y consultas usando `Flow`.                             |
+| Acceso Remoto      | Retrofit y ApiService        | Interfaz de Retrofit que define los*endpoints* de la API REST para las operaciones CRUD, utilizando funciones **`suspend`** de Coroutines.             |
+| Repositorio        | **`InventoryRepository.kt`** | Centraliza la lógica de acceso a datos. Decide si cargar desde Room, la API, o sincronizar ambos. Ejecuta llamadas en un `Dispatcher.IO`.              |
+| ViewModel          | InventoryViewModel.kt        | Contiene la lógica de negocio y gestión de estados. Utiliza `viewModelScope` y expone el estado de la UI mediante **`StateFlow`** y/o **`LiveData`** . |
+| Vista              | **Fragments y Activity**     | Observan `StateFlow` del `ViewModel` para actualizar la UI. Utilizan **View Binding** y **Navigation Component** .                                     |
 
 ---
 
-## ✨ Reactividad y Flujo de Datos (API REST)
+## ✨ Reactividad y Flujo de Datos (Sincronización)
 
-El flujo de datos está diseñado para ser completamente reactivo, centrado en la obtención y visualización de datos remotos mediante **Retrofit** y **Coroutines** .
+El flujo de datos está diseñado para ser reactivo y manejar la sincronización con la API:
 
-1. **Disparo de la Solicitud:** En el `UsersListFragment`, el **`UserViewModel`** invoca una función `suspend` en el **`UserRepository`** para obtener la lista de usuarios.
-2. **Ejecución Asíncrona (Coroutines):** El **`ViewModel`** utiliza `viewModelScope.launch` para ejecutar la llamada a la API fuera del hilo principal, garantizando que la UI no se bloquee.
-3. **Mapeo y Almacenamiento:** Retrofit descarga el JSON y lo mapea a la estructura de objetos `User` del modelo.
-4. **Actualización de LiveData:** El **`ViewModel`** actualiza su **`userList: LiveData<List<User>>`** con los datos recibidos (o el estado de error/carga).
-5. **Sincronización de UI:** El observador en el **`UsersListFragment`** detecta automáticamente el cambio en `userList` y actualiza el **`RecyclerView`** con los nuevos datos, manteniendo la UI reactiva y actualizada.
+1. **Disparo de la Solicitud:** Un _Fragment_ llama a una función del `ViewModel` (ej.`deleteProduct`).
+2. **Transición de Estado:** El `ViewModel` inmediatamente emite un estado **`UiState.Loading`** a través de su `StateFlow`.
+3. **Lógica del Repositorio:** El `Repository` ejecuta la operación (ej., eliminar localmente vía Room, y luego llama a la API vía Retrofit).
+4. **Ejecución Asíncrona (Coroutines):** Todas las llamadas de I/O (Red y DB) se ejecutan dentro de **Kotlin Coroutines** en el `viewModelScope` utilizando `Dispatchers.IO`.
+5. **Actualización de `StateFlow`:** Al finalizar la operación, el `ViewModel` emite el estado final **`UiState.Success`** o **`UiState.Error`** junto con los datos o mensajes correspondientes.
+6. **Sincronización de UI:** La interfaz de usuario (Vista) reacciona a este cambio de estado (ej., oculta la barra de progreso y muestra la lista actualizada o un mensaje de error).
 
 ---
 
@@ -252,7 +235,7 @@ a. **Clonar el repositorio:**
 
 ```bash
 
-https://github.com/jcordovaj/ae2_abpro1_Listeylor.git
+https://github.com/jcordovaj/EvalFinal_InventarioAPI.git
 
 ```
 
@@ -298,6 +281,6 @@ Se puede contribuir reportando problemas o con nuevas ideas, por favor respetar 
 
 ## 🔹 Licencia
 
-Proyecto con fines educativos.
+GPL-3.0 license.
 
 ---
